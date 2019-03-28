@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html lang="en" class="no-js">
+<!--<![endif]-->
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Admin Post</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <link rel="stylesheet" type="text/css" href="bootstrap-4.0.0-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous" defer="defer"></script>
+    <script src="index.js" defer></script>
+</head>
+
+<body>
+    <div class="admin post">
+        <form action="/createAdminPost" method="POST">
+            <div class="form-group">
+                <label for="adminPostTitle"><h3>Title</h3></label>
+                <input class="form-control" type="text" name="title" placeholder="What's the update about?" autocomplete="off" />
+                <label for="adminPostContent"><h3>Create new Post</h3></label>
+                <textarea class="form-control" name="content" id="adminPostContent" cols="100" rows="10" placeholder="Enter update..."></textarea>
+                <label for="adminPostAmount"><h3>Amount (NGN)</h3></label>
+                <input class="form-control amount" name="toPay" type="number" placeholder="Amount required for this update" autocomplete="off" />
+            </div>
+            <button type="submit" class="btn btn-success">Create Update</button>
+        </form>
+    </div>
+    <div class="dashboard-container">
+        <div class="dashboard-nav">
+            <ul>
+                <li class="dashboard-nav-header">
+                    <span>
+                            <img class ="dashboard-profile-img" src="profileImage.png" alt="profile image">
+                        </span>
+                </li>
+                <div class="dashboard-item-container">
+                    <li class="dashboard-item">
+                        <a class="nav-bar-item" href="/profile">
+                            <span class="nav-bar-item">Profile</span>
+                        </a>
+                    </li>
+                    <li class="dashboard-item">
+                        <a class="nav-bar-item" href="/update">
+                            <span class="nav-bar-item">Update</span>
+                        </a>
+                    </li>
+                    <li class="dashboard-item">
+                        <a class="nav-bar-item" href="/payment">
+                            <span class="nav-bar-item">Make Payment</span>
+                        </a>
+                    </li>
+                    <li class="dashboard-item">
+                        <a class="nav-bar-item" href="/general">
+                            <span class="nav-bar-item">General Page</span>
+                        </a>
+                    </li>
+                </div>
+            </ul>
+        </div>
+    </div>
+</body>

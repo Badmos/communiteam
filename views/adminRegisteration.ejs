@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js">
+<!--<![endif]-->
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <link rel="stylesheet" type="text/css" href="bootstrap-4.0.0-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body class="body login-body admin-bg">
+    <!--[if lt IE 7]>
+            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-4 col-sm-4 col-xs-12"></div>
+            <div class="col-md-4 col-sm-4 col-xs-12">
+                <form class="form-container admin-register" action="/admin-register" method="POST">
+                    <h2>Become an Admin</h2>
+                    <!-- <div class="form-group">
+                        <label for="lastName">Phone</label>
+                        <input type="tel" class="form-control" name="phoneNumber" id="phoneNumber" placeholder="E.g 08012345678">
+                    </div>
+                    ###### INCLUDE COMMENT CODE IN DASHBOARD SO THEY USERS UPDATE ACCOUNT FOR BETTER UX
+                    <div class="form-group">
+                        <label for="Address">Address</label>
+                        <input type="text" class="form-control" name="address" id="address" placeholder="25, Ahmadu Bello Way, VI, Lagos">
+                    </div> -->
+
+                    <div class="form-group">
+                        <label for="exampleInputEmail1">Email</label>
+                        <input type="email" class="form-control" id="exampleInputEmail1" name="adminEmail" aria-describedby="emailHelp" placeholder="Enter email">
+                        <!-- <small id="emailHelp" class="form-text text-muted privacy">We'll never share your email with anyone else.</small> -->
+                        <!-- <small id="emailHelp" class="form-text">We'll never share your email with anyone else.</small> -->
+                    </div>
+                    <div class="form-group">
+                        <label for="exampleInputPin">Password</label>
+                        <input type="password" class="form-control" name="adminPassword" id="exampleInputPassword1" placeholder="Password">
+                    </div>
+                    <div class="form-group">
+                        <label for="adminPin">Password</label>
+                        <input type="password" class="form-control" name="adminPin" id="exampleInputPin" placeholder="Enter 8 digit pin">
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="exampleCheck1">
+                        <label class="form-check-label" for="exampleCheck1">Remember me</label>
+                    </div>
+                    <button type="submit" class="btn btn-success btn-block">Admin Sign up</button>
+                    <small>Already an admin?</small> <a class="underline-register" href="#">Login</a>
+                </form>
+            </div>
+            <div class="col-md-4 col-sm-4 col-xs-12"></div>
+        </div>
+    </div>
+    <script type="text/javascript" src="jquery-3.1.1.js"></script>
+    <script type="text/javascript" src="bootstrap-4.0.0-dist/js/bootstrap.min.js"></script>
+
+</body>
+
+</html>
