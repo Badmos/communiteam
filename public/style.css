@@ -494,3 +494,8 @@ div.post {
 input.amount {
     width: 300px;
 }
+
+.update-container {
+    position: absolute;
+    margin: 100px 350px;
+}

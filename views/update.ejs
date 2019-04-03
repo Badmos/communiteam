@@ -19,42 +19,49 @@
 </head>
 
 <body>
-    <div class="container-fluid dashboard-container">
-        <div class="row">
-            <!-- <div class="col-md-4 col-sm-4 col-xs-12"> -->
-            <div class="dashboard-nav">
-                <ul>
-                    <li class="dashboard-nav-header">
-                        <span>
-                                <img class ="dashboard-profile-img" src="profileImage.png" alt="profile image">
-                            </span>
-                    </li>
-                    <div class="dashboard-item-container">
-                        <li class="dashboard-item">
-                            <a class="nav-bar-item" href="/profile">
-                                <span class="nav-bar-item">Profile</span>
-                            </a>
-                        </li>
-                        <li class="dashboard-item">
-                            <a class="nav-bar-item" href="/update">
-                                <span class="nav-bar-item">Update</span>
-                            </a>
-                        </li>
-                        <li class="dashboard-item">
-                            <a class="nav-bar-item" href="/payment">
-                                <span class="nav-bar-item">Make Payment</span>
-                            </a>
-                        </li>
-                        <li class="dashboard-item">
-                            <a class="nav-bar-item" href="/general">
-                                <span class="nav-bar-item">General Page</span>
-                            </a>
-                        </li>
-                    </div>
-                </ul>
-            </div>
-            <!-- </div> -->
+    <div class="update-container">
+        <%user.updates.forEach(function(update) {%>
+            <p>
+                <span><%=update.title%></span>
+                <span><%=update.content%></span>
+                <span><%=update.amount%></span>
+            </p>
 
+            <% }) %>
+    </div>
+    <!-- <div class="col-md-4 col-sm-4 col-xs-12"> -->
+    <div class="dashboard-container">
+        <div class="dashboard-nav">
+            <ul>
+                <li class="dashboard-nav-header">
+                    <span>
+                        <img class ="dashboard-profile-img" src="profileImage.png" alt="profile image">
+                    </span>
+                </li>
+                <div class="dashboard-item-container">
+                    <li class="dashboard-item">
+                        <a class="nav-bar-item" href="/profile">
+                            <span class="nav-bar-item">Profile</span>
+                        </a>
+                    </li>
+                    <li class="dashboard-item">
+                        <a class="nav-bar-item" href="/update">
+                            <span class="nav-bar-item">Update</span>
+                        </a>
+                    </li>
+                    <li class="dashboard-item">
+                        <a class="nav-bar-item" href="/payment">
+                            <span class="nav-bar-item">Make Payment</span>
+                        </a>
+                    </li>
+                    <li class="dashboard-item">
+                        <a class="nav-bar-item" href="/general">
+                            <span class="nav-bar-item">General Page</span>
+                        </a>
+                    </li>
+                </div>
+            </ul>
         </div>
     </div>
+    <!-- </div> -->
 </body>

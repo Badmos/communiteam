@@ -5,6 +5,7 @@ const express = require('express'),
     passport = require('passport'),
     LocalStrategy = require('passport-local').Strategy,
     session = require('express-session'),
+    uuidv4 = require('uuid/v4'),
     app = express(),
     router = express.Router(),
     path = require('path'),
@@ -101,17 +102,15 @@ app.get('/dashboard', isLoggedIn, (req, res) => {
 
 app.get('/profile', isLoggedIn, (req, res) => {
     res.render('profile', {
-        user: req.user,
-        firstName: req.user.firstName,
-        lastName: req.user.lastName,
-        email: req.user.email,
-        state: req.user.state,
-        role: req.user.role
+        user: req.user
     });
 });
 
 app.get('/update', isLoggedIn, (req, res) => {
-    res.render('update');
+    let communityId = req.user.communityId;
+    User.findOne({ role: 'admin', communityId }).populate('updates').exec((err, user) => {
+        res.render('update', { user });
+    });
 });
 
 app.get('/payment', isLoggedIn, (req, res) => {
@@ -142,35 +141,55 @@ app.post('/login',
     })
 );
 
+app.post('/joinCommunity', isLoggedIn, (req, res) => {
+    let communityId = req.body.communityId.toLowerCase();
+    User.findOneAndUpdate({ email: req.user.email }, { $set: { communityId: communityId } }, { new: true }, (err, user) => {
+        console.log('communityId updated')
+        res.redirect('/back')
+    });
+});
+
 app.post('/createAdmin', isLoggedIn, (req, res) => {
     let potentialAdmin = req.body.potentialAdmin;
     let userRoleArray = User.schema.path('role').enumValues;
     User.findOneAndUpdate({ email: potentialAdmin }, { $set: { role: userRoleArray[1] } }, { new: true }, (err, user) => {
-        if (err) console.log(err)
+        if (err) console.log(err);
         else if (!user) {
-            console.log("Email not found! Only existing users can become admins!")
-            res.redirect('back')
+            console.log("Email not found! Only existing users can become admins!");
+            res.redirect('back');
         } else {
-            console.log(`${potentialAdmin} now has admin rights`)
-            res.redirect('back')
+            if (user.communityId === null) {
+                user.communityId = generateCommunityID();
+                user.save()
+                console.log(`${potentialAdmin} now has admin rights. CommunityID generated`);
+                res.redirect('back')
+            } else {
+                console.log(`${potentialAdmin} now has admin rights. Already has communityID`);
+                res.redirect('back')
+            }
         }
     })
 });
 
 app.post('/createAdminPost', isAdmin, (req, res) => {
-    let title = req.body.title;
-    let content = req.body.content;
-    let amount = req.body.amount;
-    let id = req.user._id;
-    let email = req.user.email;
-    let updateAuthor = { id, email }
-    let update = new Update({ title, content, amount, updateAuthor });
-    update.save().then((newUpdate) => {
-        console.log(newUpdate);
-        res.redirect('/profile')
-    }, (err) => {
-        console.log(err)
-    })
+    User.findById(req.user._id, (err, user) => {
+        let title = req.body.title;
+        let content = req.body.content;
+        let amount = req.body.amount;
+        let id = req.user._id;
+        let email = req.user.email;
+        let firstName = req.user.firstName;
+        let lastName = req.user.lastName;
+        let updateAuthor = { id, email, firstName, lastName }
+        let update = new Update({ title, content, amount, updateAuthor });
+        update.save().then((newUpdate) => {
+            user.updates.push(newUpdate);
+            user.save().then()
+            res.redirect('/profile')
+        }, (err) => {
+            console.log(err)
+        });
+    });
 })
 
 app.post('/removeAdminBadge', isLoggedIn, (req, res) => {
@@ -200,14 +219,12 @@ function isLoggedIn(req, res, next) {
 function isAdmin(req, res, next) {
     if (req.user.role === 'admin') return next()
     res.send(req.user);
+};
+
+function generateCommunityID() {
+    return uuidv4().slice(-6);
 }
 
 app.listen(port, () => {
     console.log(`listening on ${port}`)
 });
-
-// app.get('/update', isLoggedIn, (req, res) => {
-//     User.findOne({role: 'admin', group: req.user.group, }, (err, user) => {
-//         user.posts
-//     })
-// });

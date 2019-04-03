@@ -52,14 +52,20 @@ let userSchema = new Schema({
         enum: ['user', 'admin', 'superAdmin'],
         default: 'user'
     },
-    toPay: Number,
-    group: {
-        type: String
+    toPay: {
+        type: Number,
+        default: 0
+    },
+    communityId: {
+        type: String,
+        default: null
     },
     updates: [{
         type: Schema.Types.ObjectId,
         ref: 'Update'
     }]
+}, {
+    timestamps: true
 });
 
 let updateSchema = new Schema({
@@ -77,8 +83,12 @@ let updateSchema = new Schema({
             type: Schema.Types.ObjectId,
             ref: 'User'
         },
-        email: String
+        email: String,
+        firstName: String,
+        lastName: String
     }
+}, {
+    timestamps: true
 })
 
 

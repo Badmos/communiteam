@@ -25,6 +25,14 @@
             }
         </style>
         <% } %>
+            <% if(user.role === 'superAdmin') { %>
+                <style>
+                    .container-jumb {
+                        height: 650px;
+                        width: 450px;
+                    }
+                </style>
+                <% } %>
 </head>
 
 <body>
@@ -32,29 +40,41 @@
     <div class="container">
         <div class="jumbotron container-jumb">
             <h4>User Profile</h4>
-            <p><b>Name:</b> <span><%= firstName + " " + lastName %></span></p>
-            <p><b>Email:</b> <span><%= email %></span></p>
-            <p><b>State:</b> <span><%= state %></span></p>
-            <p><b>Role:</b> <span><%= role %></span></p>
-            <% if(user.role === "superAdmin")  { %>
-                <form action="/createAdmin" method="POST">
-                    <div class="form-group">
-                        <label for="potentialAdmin">Give Admin rights</label>
-                        <input type="email" class="form-control" name="potentialAdmin" placeholder="user email">
-                        <button type="submit" class="btn btn-block btn-success">Create admin</button>
-                    </div>
-                </form>
-                <form action="/removeAdminBadge" method="POST">
-                    <label for="potentialUser">Remove Admin Badge</label>
-                    <input type="email" class="form-control" name="potentialUser" placeholder="Admin email">
-                    <button type="submit" class="btn btn-block btn-danger">Remove admin badge</button>
-                </form>
+            <p><b>Name:</b> <span><%= user.firstName + " " + user.lastName %></span></p>
+            <p><b>Email:</b> <span><%= user.email %></span></p>
+            <p><b>State:</b> <span><%= user.state %></span></p>
+            <p><b>Role:</b> <span><%= user.role %></span></p>
+            <% if (user.communityId !== null) {%>
+                <p><b>CommunityID:</b> <span><%= user.communityId %></span></p>
                 <% } %>
-                    <% if(user.role === 'admin') { %>
-                        <div class="admin">
-                            <a href="/adminPost"><button class="button" type="submit">Submit</button></a>
-                        </div>
+                    <% if(user.communityId === null)  { %>
+                        <form action="/joinCommunity" method="POST">
+                            <div class="form-group">
+                                <label for="communityId">Community ID</label>
+                                <input type="text" class="form-control" name="communityId" id="communityId" placeholder="What is your community identifier?">
+                                <button type="submit" class="btn btn-success btn-block">Join your community</button>
+                            </div>
+                        </form>
                         <% } %>
+                            <% if(user.role === "superAdmin")  { %>
+                                <form action="/createAdmin" method="POST">
+                                    <div class="form-group">
+                                        <label for="potentialAdmin">Give Admin rights</label>
+                                        <input type="email" class="form-control" name="potentialAdmin" placeholder="user email">
+                                        <button type="submit" class="btn btn-block btn-success">Create admin</button>
+                                    </div>
+                                </form>
+                                <form action="/removeAdminBadge" method="POST">
+                                    <label for="potentialUser">Remove Admin Badge</label>
+                                    <input type="email" class="form-control" name="potentialUser" placeholder="Admin email">
+                                    <button type="submit" class="btn btn-block btn-danger">Remove admin badge</button>
+                                </form>
+                                <% } %>
+                                    <% if(user.role === 'admin') { %>
+                                        <div class="admin">
+                                            <a href="/adminPost"><button class="button" type="submit">Submit</button></a>
+                                        </div>
+                                        <% } %>
         </div>
     </div>
     <div class="dashboard-container">
