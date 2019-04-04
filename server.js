@@ -96,7 +96,6 @@ app.get('/admin-register', (req, res) => {
 });
 
 app.get('/dashboard', isLoggedIn, (req, res) => {
-    console.log(req.user)
     res.render('dashboard');
 });
 
@@ -180,12 +179,40 @@ app.post('/createAdminPost', isAdmin, (req, res) => {
         let email = req.user.email;
         let firstName = req.user.firstName;
         let lastName = req.user.lastName;
-        let updateAuthor = { id, email, firstName, lastName }
+        let updateAuthor = { id, email, firstName, lastName };
+        let communityId = req.user.communityId;
+
+        if (!isNaN(parseFloat(amount))) {
+            User.find({ communityId }, (err, allCommunityUsers) => {
+                if (allCommunityUsers) {
+                    for (let individualUser in allCommunityUsers) {
+                        if (allCommunityUsers.hasOwnProperty(individualUser)) {
+                            let communityUser = allCommunityUsers[individualUser]
+                            communityUser.toPay = communityUser.toPay + Number(amount);
+                            communityUser.save().then(() => {
+                                console.log("Amount Added to toPay successfully!!!")
+                            }).catch((err) => {
+                                console.log(err)
+                            })
+                        }
+                    }
+
+                } else {
+                    console.log(err)
+                }
+            });
+        } else if (amount === "") {
+            console.log("Admin did not specify an amount for this update")
+        } else {
+            console.log("Type provided by admin is not a number")
+        }
+
         let update = new Update({ title, content, amount, updateAuthor });
         update.save().then((newUpdate) => {
             user.updates.push(newUpdate);
-            user.save().then()
-            res.redirect('/profile')
+            user.save().then(() => {
+                res.redirect('/profile')
+            })
         }, (err) => {
             console.log(err)
         });
