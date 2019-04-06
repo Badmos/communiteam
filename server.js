@@ -116,11 +116,14 @@ app.get('/profile', isLoggedIn, (req, res) => {
 
 app.get('/update', isLoggedIn, (req, res) => {
     let communityId = req.user.communityId;
-    Update.find({ communityId }).then((updates) => {
-        res.render('update', { updates })
-    }).catch((err) => {
-        console.log(err)
-    })
+    if (communityId === null) console.log('You must join a community to view updates'), res.redirect('/profile');
+    else {
+        Update.find({ communityId }).then((updates) => {
+            res.render('update', { updates })
+        }).catch((err) => {
+            console.log(err)
+        })
+    }
 });
 
 app.get('/payment', isLoggedIn, (req, res) => {
