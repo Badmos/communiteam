@@ -20,14 +20,19 @@
 
 <body>
     <div class="update-container">
-        <%user.updates.forEach(function(update) {%>
-            <p>
-                <span><%=update.title%></span>
-                <span><%=update.content%></span>
-                <span><%=update.amount%></span>
-            </p>
+        <%for (var update in updates) {%>
+            <%if(updates.hasOwnProperty(update)) {%>
+                <% var newUpdate = updates[update] %>
+                    <p>
+                        <span><%=newUpdate.title%></span>
+                        <span><%=newUpdate.content%></span>
+                        <span><%=newUpdate.amount%></span>
+                        <span><%=newUpdate.communityId%></span>
+                        <!-- <span><%=updates%></span> -->
 
-            <% }) %>
+                    </p>
+                    <% } %>
+                        <% } %>
     </div>
     <!-- <div class="col-md-4 col-sm-4 col-xs-12"> -->
     <div class="dashboard-container">

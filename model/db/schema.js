@@ -78,6 +78,7 @@ let updateSchema = new Schema({
         // required: true
     },
     amount: Number,
+    communityId: String,
     updateAuthor: {
         id: {
             type: Schema.Types.ObjectId,

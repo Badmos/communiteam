@@ -105,11 +105,22 @@ app.get('/profile', isLoggedIn, (req, res) => {
     });
 });
 
+// Block is commented out because we're now searching a collection for update and not user documents.
+// We'll use populate user with update whenever we need to retrieve the content a particular user posted.
+// app.get('/update', isLoggedIn, (req, res) => {
+//     let communityId = req.user.communityId;
+//     User.findOne({ role: 'admin', communityId }).populate('updates').exec((err, user) => {
+//         res.render('update', { user });
+//     });
+// });
+
 app.get('/update', isLoggedIn, (req, res) => {
     let communityId = req.user.communityId;
-    User.findOne({ role: 'admin', communityId }).populate('updates').exec((err, user) => {
-        res.render('update', { user });
-    });
+    Update.find({ communityId }).then((updates) => {
+        res.render('update', { updates })
+    }).catch((err) => {
+        console.log(err)
+    })
 });
 
 app.get('/payment', isLoggedIn, (req, res) => {
@@ -179,9 +190,10 @@ app.post('/createAdminPost', isAdmin, (req, res) => {
         let email = req.user.email;
         let firstName = req.user.firstName;
         let lastName = req.user.lastName;
-        let updateAuthor = { id, email, firstName, lastName };
         let communityId = req.user.communityId;
+        let updateAuthor = { id, email, firstName, lastName };
 
+        //check if update amount field empty of Non-Number type and add it to all community users debt.
         if (!isNaN(parseFloat(amount))) {
             User.find({ communityId }, (err, allCommunityUsers) => {
                 if (allCommunityUsers) {
@@ -207,7 +219,7 @@ app.post('/createAdminPost', isAdmin, (req, res) => {
             console.log("Type provided by admin is not a number")
         }
 
-        let update = new Update({ title, content, amount, updateAuthor });
+        let update = new Update({ title, content, amount, communityId, updateAuthor });
         update.save().then((newUpdate) => {
             user.updates.push(newUpdate);
             user.save().then(() => {
