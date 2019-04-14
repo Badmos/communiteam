@@ -65,12 +65,21 @@
                                     </div>
                                 </form>
                                 <form action="/removeAdminBadge" method="POST">
-                                    <label for="potentialUser">Remove Admin Badge</label>
-                                    <input type="email" class="form-control" name="potentialUser" placeholder="Admin email">
-                                    <button type="submit" class="btn btn-block btn-danger">Remove admin badge</button>
+                                    <div class="form-group">
+                                        <label for="potentialUser">Remove Admin Badge</label>
+                                        <input type="email" class="form-control" name="potentialUser" placeholder="Admin email">
+                                        <button type="submit" class="btn btn-block btn-danger">Remove admin badge</button>
+                                    </div>
                                 </form>
                                 <% } %>
                                     <% if(user.role === 'admin') { %>
+                                        <form action="/addCommunityUsers" method="POST">
+                                            <div class="form-group">
+                                                <label for="communityUser">Add Email to Community List</label>
+                                                <input type="email" class="form-control" name="communityUser" placeholder="Add potential user's email">
+                                                <button type="submit" class="btn btn-block btn-success">Add new email</button>
+                                            </div>
+                                        </form>
                                         <div class="admin">
                                             <a href="/adminPost"><button class="button" type="submit">Submit</button></a>
                                         </div>

@@ -10,7 +10,7 @@ const express = require('express'),
     router = express.Router(),
     path = require('path'),
     port = app.get(process.env.port) || 2020;
-const { User, Update } = require('./model/db/schema');
+const { User, Update, Community } = require('./model/db/schema');
 // const Update = require('./model/db/schema');
 
 mongoose.connect('mongodb://localhost:27017/communiteam', { useNewUrlParser: true, useCreateIndex: true, useFindAndModify: false });
@@ -154,14 +154,6 @@ app.post('/login',
     })
 );
 
-app.post('/joinCommunity', isLoggedIn, (req, res) => {
-    let communityId = req.body.communityId.toLowerCase();
-    User.findOneAndUpdate({ email: req.user.email }, { $set: { communityId: communityId } }, { new: true }, (err, user) => {
-        console.log('communityId updated')
-        res.redirect('/back')
-    });
-});
-
 app.post('/createAdmin', isLoggedIn, (req, res) => {
     let potentialAdmin = req.body.potentialAdmin;
     let userRoleArray = User.schema.path('role').enumValues;
@@ -172,14 +164,67 @@ app.post('/createAdmin', isLoggedIn, (req, res) => {
             res.redirect('back');
         } else {
             if (user.communityId === null) {
-                user.communityId = generateCommunityID();
-                user.save()
-                console.log(`${potentialAdmin} now has admin rights. CommunityID generated`);
-                res.redirect('back')
+                let communityIdStorage = generateCommunityID();
+
+                //check if communityId is Unique. Save it alongside its email.
+                Community.findOne({ communityId: communityIdStorage }, (err, community) => {
+                    if (community) console.log(`${community} exists. Make user admin again`), res.redirect('back')
+                    else {
+                        let newCommunity = new Community();
+                        newCommunity.communityId = communityIdStorage;
+                        newCommunity.communityMembersEmail.push({ email: potentialAdmin })
+                        newCommunity.save();
+
+                        //save admin's newly generated communityId.
+                        user.communityId = communityIdStorage;
+                        user.save()
+                        console.log(`${potentialAdmin} now has admin rights. CommunityID generated`);
+                        res.redirect('back')
+                    }
+                })
             } else {
                 console.log(`${potentialAdmin} now has admin rights. Already has communityID`);
                 res.redirect('back')
             }
+        }
+    })
+});
+
+app.post('/addCommunityUsers', isLoggedIn, isAdmin, (req, res) => {
+    let communityId = req.user.communityId
+    let email = req.body.communityUser;
+    Community.findOne({ communityId }).then((community) => {
+        community.communityMembersEmail.push({ email })
+        community.save().then((doc) => {
+            console.log(`${email} added to community list!`)
+            console.log(doc.id(_id))
+            res.redirect('back')
+        }).catch((err) => {
+            console.log(err)
+            res.redirect('back')
+        })
+    }).catch((err) => {
+        console.log(err)
+    })
+});
+
+app.post('/joinCommunity', isLoggedIn, (req, res) => {
+    let communityId = req.body.communityId.toLowerCase();
+    let email = req.user.email;
+
+    //ensure user provides an existing community and admin has added them to the community list.
+    Community.findOne({ communityId, communityMembersEmail: { $elemMatch: { email } } }, (err, community) => {
+        if (err) console.log(err)
+        else if (community) {
+
+            //update user's community ID
+            User.findOneAndUpdate({ email }, { $set: { communityId: communityId } }, { new: true }, (err, user) => {
+                console.log('communityId updated')
+                res.redirect('back')
+            });
+        } else {
+            console.log('Sorry, the communityId you provided does not exist')
+            res.redirect('back')
         }
     })
 });
@@ -264,7 +309,7 @@ function isAdmin(req, res, next) {
 };
 
 function generateCommunityID() {
-    return uuidv4().slice(-6);
+    return uuidv4().slice(-6).toLowerCase();
 }
 
 app.listen(port, () => {

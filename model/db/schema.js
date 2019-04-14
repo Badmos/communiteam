@@ -90,8 +90,15 @@ let updateSchema = new Schema({
     }
 }, {
     timestamps: true
-})
+});
 
+let communitySchema = new Schema({
+    communityId: String,
+    communityName: String,
+    communityMembersEmail: [{
+        email: String
+    }],
+})
 
 userSchema.methods.correctPassword = function(password) {
     var user = this;
@@ -115,6 +122,8 @@ userSchema.pre("save", function(next) {
 
 let User = mongoose.model('User', userSchema);
 let Update = mongoose.model('Update', updateSchema);
+let Community = mongoose.model('Community', communitySchema);
 
 module.exports.User = User;
 module.exports.Update = Update;
+module.exports.Community = Community;
