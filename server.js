@@ -11,7 +11,6 @@ const express = require('express'),
     path = require('path'),
     port = app.get(process.env.port) || 2020;
 const { User, Update, Community } = require('./model/db/schema');
-// const Update = require('./model/db/schema');
 
 mongoose.connect('mongodb://localhost:27017/communiteam', { useNewUrlParser: true, useCreateIndex: true, useFindAndModify: false });
 
@@ -172,11 +171,14 @@ app.post('/createAdmin', isLoggedIn, (req, res) => {
                     else {
                         let newCommunity = new Community();
                         newCommunity.communityId = communityIdStorage;
+                        newCommunity.communityCount = 1;
+                        newCommunity.presentCommunityCount = newCommunity.communityCount
                         newCommunity.communityMembersEmail.push({ email: potentialAdmin })
                         newCommunity.save();
 
                         //save admin's newly generated communityId.
                         user.communityId = communityIdStorage;
+                        user.houseId = newCommunity.communityCount;
                         user.save()
                         console.log(`${potentialAdmin} now has admin rights. CommunityID generated`);
                         res.redirect('back')
@@ -197,7 +199,6 @@ app.post('/addCommunityUsers', isLoggedIn, isAdmin, (req, res) => {
         community.communityMembersEmail.push({ email })
         community.save().then((doc) => {
             console.log(`${email} added to community list!`)
-            console.log(doc.id(_id))
             res.redirect('back')
         }).catch((err) => {
             console.log(err)
@@ -216,18 +217,26 @@ app.post('/joinCommunity', isLoggedIn, (req, res) => {
     Community.findOne({ communityId, communityMembersEmail: { $elemMatch: { email } } }, (err, community) => {
         if (err) console.log(err)
         else if (community) {
+            //update total number of users who have joined community (community count) and the ones that presently remain
+            community.communityCount = community.communityCount + 1;
+            community.presentCommunityCount = community.presentCommunityCount + 1;
+            community.save();
 
-            //update user's community ID
-            User.findOneAndUpdate({ email }, { $set: { communityId: communityId } }, { new: true }, (err, user) => {
+            //update user's community ID and increment houseID by 1
+            let houseId = community.communityCount + 1
+            User.findOneAndUpdate({ email }, { $set: { communityId: communityId, houseId: houseId } }, { new: true }, (err, user) => {
                 console.log('communityId updated')
                 res.redirect('back')
             });
         } else {
-            console.log('Sorry, the communityId you provided does not exist')
+            console.log('Sorry, the communityId and your email do not match!')
             res.redirect('back')
         }
     })
 });
+
+// IMPLEMENT CODE FOR USERS TO LEAVE A COMMUNITY. HOWEVER,, USERS CAN ONLY LEAVE A COMMUNITY IF THEY HAVE CLEARED
+// THEIR DEBT IN THE CURRENT COMMUNITY
 
 app.post('/createAdminPost', isAdmin, (req, res) => {
     User.findById(req.user._id, (err, user) => {

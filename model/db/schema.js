@@ -63,7 +63,8 @@ let userSchema = new Schema({
     updates: [{
         type: Schema.Types.ObjectId,
         ref: 'Update'
-    }]
+    }],
+    houseId: Number
 }, {
     timestamps: true
 });
@@ -98,6 +99,13 @@ let communitySchema = new Schema({
     communityMembersEmail: [{
         email: String
     }],
+    //Total number of people who have joined community
+    communityCount: {
+        type: Number,
+        default: 0
+    },
+    //Number of people remaining in community. After other may have left.
+    presentCommunityCount: Number
 })
 
 userSchema.methods.correctPassword = function(password) {
