@@ -24,6 +24,7 @@ let userSchema = new Schema({
         required: true,
         unique: true,
         trim: true,
+        lowercase: true,
         validate: {
             isAsync: false,
             validator: passedEmail => validator.isEmail(passedEmail)
@@ -60,11 +61,20 @@ let userSchema = new Schema({
         type: String,
         default: null
     },
+    houseId: Number,
     updates: [{
         type: Schema.Types.ObjectId,
         ref: 'Update'
     }],
-    houseId: Number
+    paymentDetails: [{
+        paymentId: String,
+        paymentTitle: String,
+        paymentStatus: {
+            type: Boolean,
+            default: false
+        },
+        paymentDate: Date
+    }]
 }, {
     timestamps: true
 });

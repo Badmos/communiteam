@@ -194,18 +194,26 @@ app.post('/createAdmin', isLoggedIn, (req, res) => {
 
 app.post('/addCommunityUsers', isLoggedIn, isAdmin, (req, res) => {
     let communityId = req.user.communityId
-    let email = req.body.communityUser;
-    Community.findOne({ communityId }).then((community) => {
-        community.communityMembersEmail.push({ email })
-        community.save().then((doc) => {
-            console.log(`${email} added to community list!`)
-            res.redirect('back')
-        }).catch((err) => {
+    let email = req.body.communityUser.toLowerCase();
+    Community.findOne({ communityId, communityMembersEmail: { $elemMatch: { email } } }, (err, communityUser) => {
+        if (!communityUser) {
+            Community.findOne({ communityId }).then((community) => {
+                community.communityMembersEmail.push({ email })
+                community.save().then((doc) => {
+                    console.log(`${email} added to community list!`)
+                    res.redirect('back')
+                }).catch((err) => {
+                    console.log(err)
+                    res.redirect('back')
+                })
+            }).catch((err) => {
+                console.log(err)
+            })
+        } else if (err) {
             console.log(err)
-            res.redirect('back')
-        })
-    }).catch((err) => {
-        console.log(err)
+        } else {
+            console.log('User already exists in the community!')
+        }
     })
 });
 
@@ -223,7 +231,7 @@ app.post('/joinCommunity', isLoggedIn, (req, res) => {
             community.save();
 
             //update user's community ID and increment houseID by 1
-            let houseId = community.communityCount + 1
+            let houseId = community.communityCount;
             User.findOneAndUpdate({ email }, { $set: { communityId: communityId, houseId: houseId } }, { new: true }, (err, user) => {
                 console.log('communityId updated')
                 res.redirect('back')
@@ -250,41 +258,50 @@ app.post('/createAdminPost', isAdmin, (req, res) => {
         let communityId = req.user.communityId;
         let updateAuthor = { id, email, firstName, lastName };
 
-        //check if update amount field empty of Non-Number type and add it to all community users debt.
-        if (!isNaN(parseFloat(amount))) {
-            User.find({ communityId }, (err, allCommunityUsers) => {
-                if (allCommunityUsers) {
-                    for (let individualUser in allCommunityUsers) {
-                        if (allCommunityUsers.hasOwnProperty(individualUser)) {
-                            let communityUser = allCommunityUsers[individualUser]
-                            communityUser.toPay = communityUser.toPay + Number(amount);
-                            communityUser.save().then(() => {
-                                console.log("Amount Added to toPay successfully!!!")
-                            }).catch((err) => {
-                                console.log(err)
-                            })
-                        }
-                    }
-
-                } else {
-                    console.log(err)
-                }
-            });
-        } else if (amount === "") {
-            console.log("Admin did not specify an amount for this update")
-        } else {
-            console.log("Type provided by admin is not a number")
-        }
-
         let update = new Update({ title, content, amount, communityId, updateAuthor });
         update.save().then((newUpdate) => {
+            //check if update amount field is empty or of Non-Number type
+            if (!isNaN(parseFloat(amount))) {
+                User.find({ communityId }, (err, allCommunityUsers) => {
+                    if (allCommunityUsers) {
+                        // loop through communityUsers object
+                        for (let individualUser in allCommunityUsers) {
+                            if (allCommunityUsers.hasOwnProperty(individualUser)) {
+                                let communityUser = allCommunityUsers[individualUser]
+                                    // store payment details for all community users
+                                let paymentId = newUpdate._id,
+                                    paymentTitle = req.body.title
+                                communityUser.paymentDetails.push({ paymentId, paymentTitle })
+                                    //add amount to all community users debt (toPay)
+                                communityUser.toPay = communityUser.toPay + Number(amount);
+                                communityUser.save().then(() => {
+                                    console.log("Amount Added to toPay successfully!!!")
+                                }).catch((err) => {
+                                    console.log(err)
+                                })
+                            }
+                        }
+
+                    } else {
+                        console.log(err)
+                    }
+                });
+            } else if (amount === "") {
+                console.log("Admin did not specify an amount for this update")
+            } else {
+                console.log("Type provided by admin is not a number")
+            }
             user.updates.push(newUpdate);
+            // resolve save conflict. Solves the error: "VersionError: No matching document found for id"
+            delete user.__v
             user.save().then(() => {
                 res.redirect('/profile')
             })
         }, (err) => {
             console.log(err)
         });
+    }).catch((err) => {
+        console.log(err)
     });
 })
 
