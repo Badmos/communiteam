@@ -271,7 +271,7 @@ app.post('/createAdminPost', isAdmin, (req, res) => {
                                     // store payment details for all community users
                                 let paymentId = newUpdate._id,
                                     paymentTitle = req.body.title
-                                communityUser.paymentDetails.push({ paymentId, paymentTitle })
+                                communityUser.paymentDetails.push({ paymentId, paymentTitle, communityId, communityName })
                                     //add amount to all community users debt (toPay)
                                 communityUser.toPay = communityUser.toPay + Number(amount);
                                 communityUser.save().then(() => {
@@ -292,7 +292,7 @@ app.post('/createAdminPost', isAdmin, (req, res) => {
                 console.log("Type provided by admin is not a number")
             }
             user.updates.push(newUpdate);
-            // resolve save conflict. Solves the error: "VersionError: No matching document found for id"
+            // resolve save conflict. Solves the error: "VersionError: No matching document found for id bla bla"
             delete user.__v
             user.save().then(() => {
                 res.redirect('/profile')
@@ -318,6 +318,25 @@ app.post('/removeAdminBadge', isLoggedIn, (req, res) => {
         }
     });
 });
+
+app.post('/leaveCommunity', isLoggedIn, (req, res) => {
+    let email = req.user.email;
+    User.findOne({ email, paymentDetails: { $elemMatch: { paymentStatus: false } } }).then((user) => {
+        if (user) res.redirect('/payment'), console.log('this is what happens')
+        else {
+            let userRoleArray = User.schema.path('role').enumValues,
+                role = userRoleArray[0]
+            User.findOneAndUpdate({ email }, { $set: { communityId: null, toPay: 0, role, houseId: null } }, { new: true })
+                .then((userWithoutCommunity) => {
+                    res.send(userWithoutCommunity)
+                }).catch((err) => {
+                    console.log(err)
+                })
+        }
+    }).catch((err) => {
+        console.log(err)
+    })
+})
 
 app.get('/logout', (req, res) => {
     req.logout();
