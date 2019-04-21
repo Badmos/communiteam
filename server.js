@@ -243,9 +243,6 @@ app.post('/joinCommunity', isLoggedIn, (req, res) => {
     })
 });
 
-// IMPLEMENT CODE FOR USERS TO LEAVE A COMMUNITY. HOWEVER,, USERS CAN ONLY LEAVE A COMMUNITY IF THEY HAVE CLEARED
-// THEIR DEBT IN THE CURRENT COMMUNITY
-
 app.post('/createAdminPost', isAdmin, (req, res) => {
     User.findById(req.user._id, (err, user) => {
         let title = req.body.title;
@@ -271,7 +268,8 @@ app.post('/createAdminPost', isAdmin, (req, res) => {
                                     // store payment details for all community users
                                 let paymentId = newUpdate._id,
                                     paymentTitle = req.body.title
-                                communityUser.paymentDetails.push({ paymentId, paymentTitle, communityId, communityName })
+                                isCompulsory = req.body.isCompulsory // should be a checkbox that alternates between true and false
+                                communityUser.paymentDetails.push({ paymentId, paymentTitle, isCompulsory, communityId, communityName })
                                     //add amount to all community users debt (toPay)
                                 communityUser.toPay = communityUser.toPay + Number(amount);
                                 communityUser.save().then(() => {
@@ -320,22 +318,36 @@ app.post('/removeAdminBadge', isLoggedIn, (req, res) => {
 });
 
 app.post('/leaveCommunity', isLoggedIn, (req, res) => {
-    let email = req.user.email;
-    User.findOne({ email, paymentDetails: { $elemMatch: { paymentStatus: false } } }).then((user) => {
-        if (user) res.redirect('/payment'), console.log('this is what happens')
-        else {
-            let userRoleArray = User.schema.path('role').enumValues,
-                role = userRoleArray[0]
-            User.findOneAndUpdate({ email }, { $set: { communityId: null, toPay: 0, role, houseId: null } }, { new: true })
-                .then((userWithoutCommunity) => {
-                    res.send(userWithoutCommunity)
-                }).catch((err) => {
-                    console.log(err)
-                })
-        }
-    }).catch((err) => {
-        console.log(err)
-    })
+    let email = req.user.email,
+        communityId = req.user.communityId;
+    // check if the user has any payment they owe before allowing them leave
+    User.findOne({ email, paymentDetails: { $elemMatch: { paymentStatus: false, isCompulsory: true, communityId } } })
+        .then((user) => {
+            if (user) res.redirect('/payment'), console.log('this is what happens')
+            else {
+                // remove user from community email list and update number of persons in communtiy
+                Community.findOneAndUpdate({ communityId }, { $set: { $pull: { communityMembersEmail: email } } }, { new: true })
+                    .then((community) => {
+                        community.presentCommunityCount = community.presentCommunityCount - 1
+                        community.save();
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                    });
+
+                // remove user from community. They still remain on the platform.
+                let userRoleArray = User.schema.path('role').enumValues,
+                    role = userRoleArray[0]
+                User.findOneAndUpdate({ email }, { $set: { communityId: null, toPay: 0, role, houseId: null } }, { new: true })
+                    .then((userWithoutCommunity) => {
+                        res.send(userWithoutCommunity)
+                    }).catch((err) => {
+                        console.log(err)
+                    })
+            }
+        }).catch((err) => {
+            console.log(err)
+        })
 })
 
 app.get('/logout', (req, res) => {

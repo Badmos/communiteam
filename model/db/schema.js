@@ -73,7 +73,13 @@ let userSchema = new Schema({
             type: Boolean,
             default: false
         },
-        paymentDate: Date
+        isCompulsory: {
+            type: Boolean,
+            default: false
+        },
+        paymentDate: Date,
+        communityId: String,
+        communityName: String
     }]
 }, {
     timestamps: true
@@ -107,7 +113,8 @@ let communitySchema = new Schema({
     communityId: String,
     communityName: String,
     communityMembersEmail: [{
-        email: String
+        email: String,
+        lowercase: true
     }],
     //Total number of people who have joined community
     communityCount: {
