@@ -10,7 +10,7 @@ const express = require('express'),
     router = express.Router(),
     path = require('path'),
     port = app.get(process.env.port) || 2020;
-const { User, Update, Community } = require('./model/db/schema');
+const { User, Update, Community, ExCommunityMember } = require('./model/db/schema');
 
 mongoose.connect('mongodb://localhost:27017/communiteam', { useNewUrlParser: true, useCreateIndex: true, useFindAndModify: false });
 
@@ -153,7 +153,7 @@ app.post('/login',
     })
 );
 
-app.post('/createAdmin', isLoggedIn, (req, res) => {
+app.post('/createAdmin', isLoggedIn, isSuperAdmin, (req, res) => {
     let potentialAdmin = req.body.potentialAdmin;
     let userRoleArray = User.schema.path('role').enumValues;
     User.findOneAndUpdate({ email: potentialAdmin }, { $set: { role: userRoleArray[1] } }, { new: true }, (err, user) => {
@@ -210,7 +210,7 @@ app.post('/addCommunityUsers', isLoggedIn, isAdmin, (req, res) => {
                 console.log(err)
             })
         } else if (err) {
-            console.log(err)
+            console.log(err);
         } else {
             console.log('User already exists in the community!')
         }
@@ -220,11 +220,39 @@ app.post('/addCommunityUsers', isLoggedIn, isAdmin, (req, res) => {
 app.post('/joinCommunity', isLoggedIn, (req, res) => {
     let communityId = req.body.communityId.toLowerCase();
     let email = req.user.email;
+    let secretCode = req.body.secretCode.toLowerCase();
+    let predecessorEmail = req.body.predecessorEmail.toLowerCase();
 
     //ensure user provides an existing community and admin has added them to the community list.
     Community.findOne({ communityId, communityMembersEmail: { $elemMatch: { email } } }, (err, community) => {
         if (err) console.log(err)
-        else if (community) {
+            // if the community exists and the user entered a predecessor email
+        else if (community && predecessorEmail) {
+            ExCommunityMember.findOne({ predecessorEmail }, (err, exMember) => {
+                    // check if email provided is that of an ex-member
+                    if (exMember) {
+                        let houseId = exMember.houseId;
+                        if (secretCode === exMember.secretCode) {
+                            community.communityCount = community.communityCount + 1;
+                            community.presentCommunityCount = community.presentCommunityCount + 1;
+                            community.save();
+
+                            // update user details to those of predecessor
+                            User.findOneAndUpdate({ email }, { $set: { communityId, houseId, secretCode: exMember.secretCode } }, { new: true }, (err, user) => {
+                                console.log('communityId, houseId and secret code updated. Those of the predecessor were used.')
+                                res.redirect('back')
+                            });
+                        } else {
+                            console.log('Your secret code does not match with that of your predecessor')
+                            res.redirect('back')
+                        }
+                    } else {
+                        console.log(err)
+                    }
+
+                })
+                // check if 
+        } else if (community) {
             //update total number of users who have joined community (community count) and the ones that presently remain
             community.communityCount = community.communityCount + 1;
             community.presentCommunityCount = community.presentCommunityCount + 1;
@@ -232,9 +260,11 @@ app.post('/joinCommunity', isLoggedIn, (req, res) => {
 
             //update user's community ID and increment houseID by 1
             let houseId = community.communityCount;
-            User.findOneAndUpdate({ email }, { $set: { communityId: communityId, houseId: houseId } }, { new: true }, (err, user) => {
-                console.log('communityId updated')
-                res.redirect('back')
+            User.findOneAndUpdate({ email }, { $set: { communityId, houseId, secretCode } }, { new: true }, (err, user) => {
+                if (user) console.log('communityId, houseId and secret code updated '), res.redirect('back');
+                else {
+                    console.log(err)
+                }
             });
         } else {
             console.log('Sorry, the communityId and your email do not match!')
@@ -243,7 +273,7 @@ app.post('/joinCommunity', isLoggedIn, (req, res) => {
     })
 });
 
-app.post('/createAdminPost', isAdmin, (req, res) => {
+app.post('/createAdminPost', isLoggedIn, isAdmin, (req, res) => {
     User.findById(req.user._id, (err, user) => {
         let title = req.body.title;
         let content = req.body.content;
@@ -303,7 +333,7 @@ app.post('/createAdminPost', isAdmin, (req, res) => {
     });
 })
 
-app.post('/removeAdminBadge', isLoggedIn, (req, res) => {
+app.post('/removeAdminBadge', isLoggedIn, isSuperAdmin, (req, res) => {
     let potentialUser = req.body.potentialUser;
     let userRoleArray = User.schema.path('role').enumValues;
     User.findOneAndUpdate({ email: potentialUser }, { $set: { role: userRoleArray[0] } }, { new: true }, (err, user) => {
@@ -319,7 +349,9 @@ app.post('/removeAdminBadge', isLoggedIn, (req, res) => {
 
 app.post('/leaveCommunity', isLoggedIn, (req, res) => {
     let email = req.user.email,
-        communityId = req.user.communityId;
+        communityId = req.user.communityId,
+        secretCode = req.user.secretCode,
+        houseId = req.user.houseId;
     // check if the user has any payment they owe before allowing them leave
     User.findOne({ email, paymentDetails: { $elemMatch: { paymentStatus: false, isCompulsory: true, communityId } } })
         .then((user) => {
@@ -335,10 +367,18 @@ app.post('/leaveCommunity', isLoggedIn, (req, res) => {
                         console.log(err);
                     });
 
+                // forward users community details to the collection of users who have left different communities
+                let exCommunityMember = new ExCommunityMember();
+                exCommunityMember.email = email;
+                exCommunityMember.communityId = communityId;
+                exCommunityMember.secretCode = secretCode;
+                exCommunityMember.houseId = houseId;
+                exCommunityMember.save()
+
                 // remove user from community. They still remain on the platform.
                 let userRoleArray = User.schema.path('role').enumValues,
                     role = userRoleArray[0]
-                User.findOneAndUpdate({ email }, { $set: { communityId: null, toPay: 0, role, houseId: null } }, { new: true })
+                User.findOneAndUpdate({ email }, { $set: { communityId: null, toPay: 0, role, houseId: null, secretCode: null } }, { new: true })
                     .then((userWithoutCommunity) => {
                         res.send(userWithoutCommunity)
                     }).catch((err) => {
@@ -358,6 +398,11 @@ app.get('/logout', (req, res) => {
 function isLoggedIn(req, res, next) {
     if (req.isAuthenticated()) return next()
     res.redirect('/login');
+}
+
+function isSuperAdmin(req, res, next) {
+    if (req.user.role === 'superAdmin') return next()
+    res.send(req.user);
 }
 
 function isAdmin(req, res, next) {
