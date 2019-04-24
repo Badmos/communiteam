@@ -62,6 +62,11 @@ let userSchema = new Schema({
         default: null
     },
     houseId: Number,
+    secretCode: {
+        type: String,
+        lowercase: true,
+        default: null
+    },
     updates: [{
         type: Schema.Types.ObjectId,
         ref: 'Update'
@@ -123,7 +128,17 @@ let communitySchema = new Schema({
     },
     //Number of people remaining in community. After other may have left.
     presentCommunityCount: Number
-})
+});
+
+let exCommunityMemberSchema = new Schema({
+    email: {
+        type: String,
+        lowercase: true
+    },
+    communityId: String,
+    houseId: Number,
+    secretCode: String
+});
 
 userSchema.methods.correctPassword = function(password) {
     var user = this;
@@ -148,7 +163,9 @@ userSchema.pre("save", function(next) {
 let User = mongoose.model('User', userSchema);
 let Update = mongoose.model('Update', updateSchema);
 let Community = mongoose.model('Community', communitySchema);
+let ExCommunityMember = mongoose.model('ExCommunityMember', exCommunityMemberSchema);
 
 module.exports.User = User;
 module.exports.Update = Update;
 module.exports.Community = Community;
+module.exports.ExCommunityMember = ExCommunityMember;
