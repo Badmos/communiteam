@@ -20,7 +20,7 @@
 
 <body>
     <div class="update-container">
-        <%for (var update in updates) {%>
+        <%for (var update in updates.reverse()) {%>
             <%if(updates.hasOwnProperty(update)) {%>
                 <% var newUpdate = updates[update] %>
                     <p>
