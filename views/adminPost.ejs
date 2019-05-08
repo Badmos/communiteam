@@ -28,6 +28,12 @@
                 <textarea class="form-control" name="content" id="adminPostContent" cols="100" rows="10" placeholder="Enter update..."></textarea>
                 <label for="adminPostAmount"><h3>Amount (NGN)</h3></label>
                 <input class="form-control amount" name="amount" type="number" placeholder="Amount required for this update" autocomplete="off" />
+                <label for="paymentIsCompulsory">Is this a compulsory payment?</label>
+                <select class="custom-select" name="paymentIsCompulsory"> 
+                    <option value="Select type" selected>Select payment type</option>
+                    <option value="true">Payment is compulsory</option>
+                    <option value="false">Payment is not compulsory (Voluntary Payment)</option>
+                </select>
             </div>
             <button type="submit" class="btn btn-success">Create Update</button>
         </form>
