@@ -20,15 +20,15 @@
     <% if(user.role === 'admin') { %>
         <style>
             .container-jumb {
-                height: 400px;
-                width: 400px;
+                height: 550px;
+                width: 450px;
             }
         </style>
         <% } %>
             <% if(user.role === 'superAdmin') { %>
                 <style>
                     .container-jumb {
-                        height: 650px;
+                        height: 500px;
                         width: 450px;
                     }
                 </style>
@@ -46,12 +46,22 @@
             <p><b>Role:</b> <span><%= user.role %></span></p>
             <% if (user.communityId !== null) {%>
                 <p><b>CommunityID:</b> <span><%= user.communityId %></span></p>
+                <form action="/leaveCommunity" method="POST">
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-danger">Leave this community</button>
+                    </div>
+                </form>
                 <% } %>
-                    <% if(user.communityId === null)  { %>
+                    <% if(user.communityId === null && user.role === 'user')  { %>
                         <form action="/joinCommunity" method="POST">
                             <div class="form-group">
                                 <label for="communityId">Community ID</label>
                                 <input type="text" class="form-control" name="communityId" id="communityId" placeholder="What is your community identifier?">
+                                <h5>Enter the details if you are joining through a previous user</h5>
+                                <label for="predecessorEmail">Email of the person left the house</label>
+                                <input type="email" class="form-control" name="predecessorEmail" id="predecessorEmail" placeholder="What is your predecessor's email?">
+                                <label for="secretCode">secret code of the person left the house</label>
+                                <input type="password" class="form-control" name="secretCode" id="secretCode" placeholder="What is your predecessor's secret code?">
                                 <button type="submit" class="btn btn-success btn-block">Join your community</button>
                             </div>
                         </form>
@@ -80,10 +90,20 @@
                                                 <button type="submit" class="btn btn-block btn-success">Add new email</button>
                                             </div>
                                         </form>
-                                        <div class="admin">
-                                            <a href="/adminPost"><button class="button" type="submit">Submit</button></a>
-                                        </div>
-                                        <% } %>
+                                        <% if(user.communityName === null) { %>
+                                            <form action="/addCommunityName" method="POST">
+                                                <div class="form-group">
+                                                    <label for="communityName">What is the name of your community?</label>
+                                                    <input type="text" class="form-control" name="communityName" placeholder="Add community name">
+                                                    <button type="submit" class="btn btn-block btn-success">Add community name</button>
+                                                </div>
+                                            </form>
+                                            <% } else { %>
+                                                <div class="admin">
+                                                    <a href="/adminPost"><button class="button" type="submit">Create update</button></a>
+                                                </div>
+                                                <% } %>
+                                                    <% } %>
         </div>
     </div>
     <div class="dashboard-container">
