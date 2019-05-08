@@ -7,12 +7,12 @@ let userSchema = new Schema({
     firstName: {
         type: String,
         required: true,
-        // unique: true
+        trim: true
     },
     lastName: {
         type: String,
         required: true,
-        // unique: true
+        trim: true
     },
     password: {
         type: String,
@@ -31,19 +31,23 @@ let userSchema = new Schema({
         },
         message: '{VALUE} is not a valid email'
     },
-    // phone: {
-    //     type: Number,
-    //     required: true,
-    //     minlength: 11,
-    //     validate: {
-    //         validator: phoneNumber => validator.isMobilePhone(phoneNumber)
-    //     },
-    //     message: '{VALUE} is not a valid mobile number'
-    // },
-    // address: {
-    //     type: String,
-    //     required: false
-    // },
+    active: {
+        type: Boolean,
+        default: false
+    },
+    activationToken: String,
+    phone: {
+        type: Number,
+        minlength: 11,
+        validate: {
+            validator: phoneNumber => validator.isMobilePhone(phoneNumber)
+        },
+        message: '{VALUE} is not a valid mobile number'
+    },
+    address: {
+        type: String,
+        trim: true
+    },
     state: {
         type: String,
         required: true
@@ -67,18 +71,23 @@ let userSchema = new Schema({
         lowercase: true,
         default: null
     },
+    communityName: {
+        type: String,
+        default: null
+    },
     updates: [{
         type: Schema.Types.ObjectId,
         ref: 'Update'
     }],
     paymentDetails: [{
         paymentId: String,
+        amount: Number,
         paymentTitle: String,
         paymentStatus: {
             type: Boolean,
             default: false
         },
-        isCompulsory: {
+        paymentIsCompulsory: {
             type: Boolean,
             default: false
         },
@@ -101,6 +110,10 @@ let updateSchema = new Schema({
     },
     amount: Number,
     communityId: String,
+    paymentIsCompulsory: {
+        type: Boolean,
+        Default: false
+    },
     updateAuthor: {
         id: {
             type: Schema.Types.ObjectId,
@@ -116,13 +129,18 @@ let updateSchema = new Schema({
 
 let communitySchema = new Schema({
     communityId: String,
-    communityName: String,
+    communityName: {
+        type: String,
+        default: null
+    },
     communityMembersEmail: [{
-        email: String,
-        lowercase: true
+        email: {
+            type: String,
+            lowercase: true
+        }
     }],
-    //Total number of people who have joined community
-    communityCount: {
+    //Total number of people who have joined community till date
+    communityCountFromInception: {
         type: Number,
         default: 0
     },
@@ -137,7 +155,8 @@ let exCommunityMemberSchema = new Schema({
     },
     communityId: String,
     houseId: Number,
-    secretCode: String
+    secretCode: String,
+    address: String
 });
 
 userSchema.methods.correctPassword = function(password) {
