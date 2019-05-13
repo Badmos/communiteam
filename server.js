@@ -4,15 +4,18 @@ const express = require('express'),
     bodyParser = require('body-parser'),
     passport = require('passport'),
     LocalStrategy = require('passport-local').Strategy,
+    nodemailer = require('nodemailer'),
     session = require('express-session'),
     uuidv4 = require('uuid/v4'),
     app = express(),
     router = express.Router(),
     path = require('path'),
-    port = app.get(process.env.port) || 2020;
+    PORT = app.get(process.env.PORT) || 3000;
+require('dotenv').config();
 const { User, Update, Community, ExCommunityMember } = require('./model/db/schema');
 
-mongoose.connect('mongodb://localhost:27017/communiteam', {
+let mongodbUrl = process.env.DATABASEURL || 'mongodb://localhost:27017/communiteam';
+mongoose.connect(mongodbUrl, {
     useNewUrlParser: true,
     useCreateIndex: true,
     useFindAndModify: false,
@@ -30,7 +33,7 @@ app.use(express.static(path.join(__dirname, '/public')));
 app.set('view engine', 'ejs');
 
 app.use(session({
-    secret: 'communiteamBlandUnencryptedSecret',
+    secret: process.env.SESSIONSECRET,
     resave: false,
     saveUninitialized: false
 }));
@@ -57,16 +60,58 @@ passport.use('local-register', new LocalStrategy({ usernameField: 'email', passw
             if (err) return done(err);
             if (user) return done(null, false, console.log('Email is taken'));
             else {
-                var user = new User()
+                let uuidFormattedToken = uuidv4().replace(/-/g, ''),
+                    randomToken = Math.random().toString().substring(2)
+                user = new User()
                 user.email = email;
                 user.password = password;
                 user.firstName = req.body.firstName;
                 user.lastName = req.body.lastName;
                 user.state = req.body.state;
+                user.activationToken = `${uuidFormattedToken}${randomToken}`
                 user.save(function(err) {
                     if (err) console.log(err)
                     else {
                         done(null, user)
+                        let transporter = nodemailer.createTransport({
+                            host: "smtp.gmail.com",
+                            port: 465, //587 is default,
+                            secure: true, // true for 465, false for other ports
+                            auth: {
+                                user: process.env.EMAIL,
+                                pass: process.env.PASSWORD
+                            }
+                        });
+                        let mailOptions = {
+                                from: '"Communiteam" <YusufTemitayoBadmos@gmail.com>',
+                                to: "YusufTemitayoBadmos@gmail.com",
+                                subject: "Communiteam Account Confirmation",
+                                text: "Email",
+                                html: `<div style="position: absolute;
+                                margin: 60px 60px;
+                                width: 500px;
+                                height: 270px;
+                                background-color: #f5f5f5"> 
+                                    <p style="padding-top: 10px; padding-left: 10px; font-size: 16px; line-height: 1.5; font-family: Helvetica Neue, Helvetica, Arial, sans-serif">Hi ${user.firstName},</p>
+                                    <p style="padding-left: 10px; font-size: 16px; line-height: 1.5; font-family: Helvetica Neue, Helvetica, Arial, sans-serif">Welcome aboard! Help us confirm it's you. Click the button below to activate your account.</p>
+                                    <a href="http://127.0.0.1:3000/activateUser/${user.activationToken}" style="padding-left: 150px"><button style="color: #f5f5f5;
+                                    border-radius: 4px;
+                                    text-transform: uppercase;
+                                    text-align: center;
+                                    opacity: 1;
+                                    background-color: #011B32;
+                                    padding: 12px 30px;
+                                    border: none;
+                                    text-decoration: none" type="submit">Activate account</button></a> 
+                                    <p style="font-size: 16px; padding-left: 10px; line-height: 1.5; font-family: Helvetica Neue, Helvetica, Arial, sans-serif">Doesn't seem to work? Copy the link below and paste in a browser.</p>
+                                    <p style="padding-left: 10px">http://127.0.0.1:3000/activateUser/${user.activationToken}</p>
+                                </div>`
+                            }
+                            // send mail with defined transport object
+                        transporter.sendMail(mailOptions, (error, response) => {
+                            if (error) console.log(error)
+                            else console.log(response)
+                        });
                         console.log(user)
                     }
                 })
@@ -96,16 +141,32 @@ app.get('/register', (req, res) => {
     res.render('register');
 });
 
+app.get('/activateUser/:activationToken', (req, res) => {
+    let activationToken = req.params.activationToken;
+    User.findOneAndUpdate({ activationToken }, { $set: { isActive: true } }, { new: true }, (err, user) => {
+        if (err) console.log(err)
+        else if (!user) console.log("Activation token does not exist"), res.redirect('/login')
+        else {
+            user.activationToken = undefined;
+            user.save().then(() => {
+                console.log('Account activated. Proceed to Login')
+                res.redirect('/login')
+            })
+        }
+    })
+})
+
 app.get('/login', (req, res) => {
     res.render('login')
 });
 
 app.get('/admin-register', (req, res) => {
-    res.render('adminRegisteration');
+    let user = req.user
+    res.render('adminRegisteration', { user });
 });
 
-app.get('/dashboard', isLoggedIn, (req, res) => {
-    res.render('dashboard');
+app.get('/activateAccount', isLoggedIn, (req, res) => {
+    res.render('activateAccount');
 });
 
 app.get('/profile', isLoggedIn, (req, res) => {
@@ -123,7 +184,7 @@ app.get('/profile', isLoggedIn, (req, res) => {
 //     });
 // });
 
-app.get('/update', isLoggedIn, (req, res) => {
+app.get('/update', isLoggedIn, isActivated, (req, res) => {
     let communityId = req.user.communityId;
     if (communityId === null) console.log('You must join a community to view updates'), res.redirect('/profile');
     else {
@@ -135,22 +196,22 @@ app.get('/update', isLoggedIn, (req, res) => {
     }
 });
 
-app.get('/payment', isLoggedIn, (req, res) => {
+app.get('/payment', isLoggedIn, isActivated, (req, res) => {
     res.render('payment');
 });
 
-app.get('/general', isLoggedIn, (req, res) => {
+app.get('/general', isLoggedIn, isActivated, (req, res) => {
     res.render('general');
 });
 
-app.get('/adminPost', isLoggedIn, isAdmin, hasCommunityName, (req, res) => {
+app.get('/adminPost', isLoggedIn, isAdmin, hasCommunityName, isActivated, (req, res) => {
     res.render('adminPost')
 })
 
 app.post('/register',
     passport.authenticate('local-register', {
         failureRedirect: '/',
-        successRedirect: '/dashboard',
+        successRedirect: '/activateAccount',
         failureFlash: true
     })
 );
@@ -158,7 +219,7 @@ app.post('/register',
 app.post('/login',
     passport.authenticate('local-login', {
         failureRedirect: '/',
-        successRedirect: '/dashboard',
+        successRedirect: '/profile',
         failureFlash: true
     })
 );
@@ -172,7 +233,7 @@ app.post('/createAdmin', isLoggedIn, isSuperAdmin, (req, res) => {
             console.log("Email not found! Only existing users can become admins!");
             res.redirect('back');
         } else {
-            if (user.communityId === null) {
+            if (user.communityId === null && user.isActive) {
                 let communityIdStorage = generateCommunityID();
 
                 //check if communityId is Unique. Save it alongside its email.
@@ -195,7 +256,7 @@ app.post('/createAdmin', isLoggedIn, isSuperAdmin, (req, res) => {
                     }
                 })
             } else {
-                console.log(`${potentialAdmin} now has admin rights. Already has communityID`);
+                console.log(`${potentialAdmin} now has admin rights. Already has communityID. Potential admins must be activated.`);
                 res.redirect('back')
             }
         }
@@ -227,7 +288,7 @@ app.post('/addCommunityUsers', isLoggedIn, isAdmin, (req, res) => {
     })
 });
 
-app.post('/joinCommunity', isLoggedIn, (req, res) => {
+app.post('/joinCommunity', isLoggedIn, isActivated, (req, res) => {
     let communityId = req.body.communityId.toLowerCase();
     let email = req.user.email;
     let secretCode = req.body.secretCode.toLowerCase().trim(); // will be used to transfer membership through members
@@ -283,7 +344,7 @@ app.post('/joinCommunity', isLoggedIn, (req, res) => {
     })
 });
 
-app.post('/addCommunityName', isLoggedIn, isAdmin, (req, res) => {
+app.post('/addCommunityName', isLoggedIn, isAdmin, isActivated, (req, res) => {
     let communityId = req.user.communityId,
         communityName = req.body.communityName;
     User.findByIdAndUpdate(req.user._id, { $set: { communityName } }, { new: true })
@@ -303,10 +364,11 @@ app.post('/addCommunityName', isLoggedIn, isAdmin, (req, res) => {
 
 });
 
-app.post('/updateProfileDetails', isLoggedIn, (req, res) => {
+app.post('/updateProfileDetails', isLoggedIn, isActivated, (req, res) => {
     let phone = req.body.phone,
         address = req.body.address,
-        state = req.body.state;
+        state = req.body.state,
+        secretCode = req.body.secretCode;
 })
 
 app.post('/createAdminPost', isLoggedIn, isAdmin, (req, res) => {
@@ -438,19 +500,24 @@ app.get('/logout', (req, res) => {
 });
 
 function isLoggedIn(req, res, next) {
-    if (req.isAuthenticated()) return next()
+    if (req.isAuthenticated()) return next();
     res.redirect('/login');
 }
 
 function isSuperAdmin(req, res, next) {
-    if (req.user.role === 'superAdmin') return next()
+    if (req.user.role === 'superAdmin') return next();
     res.send(req.user);
 }
 
 function isAdmin(req, res, next) {
-    if (req.user.role === 'admin') return next()
+    if (req.user.role === 'admin') return next();
     res.send(req.user);
 };
+
+function isActivated(req, res, next) {
+    if (req.user.isActive) return next();
+    res.send(req.user);
+}
 
 function hasCommunityName(req, res, next) {
     if (req.user.communityName !== null) return next()
@@ -461,6 +528,6 @@ function generateCommunityID() {
     return uuidv4().slice(-6).toLowerCase();
 }
 
-app.listen(port, () => {
-    console.log(`listening on ${port}`)
+app.listen(PORT, () => {
+    console.log(`listening on ${PORT}`)
 });
