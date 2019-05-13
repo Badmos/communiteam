@@ -31,7 +31,7 @@ let userSchema = new Schema({
         },
         message: '{VALUE} is not a valid email'
     },
-    active: {
+    isActive: {
         type: Boolean,
         default: false
     },
