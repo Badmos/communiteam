@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js">
+<!--<![endif]-->
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <link rel="stylesheet" type="text/css" href="bootstrap-4.0.0-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 col-sm-4 col-xs-12"></div>
+            <div class="col-md-4 col-sm-4 col-xs-12">
+                <form class="form-container register" action="/updateProfileDetails" enctype="multipart/form-data" method="POST">
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" class="form-control" name="phone" id="phone" placeholder="E.g 08012345678">
+                    </div>
+                    <label for="state">Choose state of residence</label>
+                    <select class="custom-select" name="state" id="state">
+                        <option value="1" selected="">Select a state</option>
+                        <option value="2">Abia</option>
+                        <option value="3">Adamawa</option> 
+                        <option value="4">Akwa Ibom</option>
+                        <option value="5">Anambra</option>
+                        <option value="6">Bauchi</option>
+                        <option value="7">Bayelsa</option>
+                        <option value="8">Benue</option>
+                        <option value="9">Borno</option>
+                        <option value="10">Cross River</option>
+                        <option value="11">Delta</option>
+                        <option value="12">Ebonyi</option>
+                        <option value="13">Enugu</option>
+                        <option value="14">Edo</option>
+                        <option value="15">Ekiti</option>
+                        <option value="16">Gombe</option>
+                        <option value="17">Imo</option>
+                        <option value="18">Jigawa</option>
+                        <option value="19">Kaduna</option>
+                        <option value="20">Kano</option>
+                        <option value="21">Katsina</option>
+                        <option value="22">Kebbi</option>
+                        <option value="23">Kogi</option>
+                        <option value="24">Kwara</option>
+                        <option value="25">Lagos</option>
+                        <option value="26">Nasarawa</option>
+                        <option value="27">Niger</option>
+                        <option value="28">Ogun</option>
+                        <option value="29">Ondo</option>
+                        <option value="30">Osun</option>
+                        <option value="31">Oyo</option>
+                        <option value="32">Plateau</option>
+                        <option value="33">Rivers</option>
+                        <option value="34">Sokoto</option>
+                        <option value="35">Taraba</option>
+                        <option value="36">Yobe</option>
+                        <option value="37">Zamfara</option>
+                        <option value="38">FCT</option>                    
+                    </select>
+                    <div class="form-group">
+                        <label for="Address">Address</label>
+                        <input type="text" class="form-control" name="address" id="address" placeholder="25, Ahmadu Bello Way, VI, Lagos">
+                    </div>
+                    <div class="form-group">
+                        <label for="secretCode">Change secret code</label>
+                        <input type="text" class="form-control" name="secretCode" id="secretCode" value="<%=user.secretCode %>" placeholder="Secret Code">
+                    </div>
+                    <div class="form-group">
+                        <label for="">Add a profile photo. Should be jpg or png</label>
+                        <input type="file" name="userPhoto" class="form-control" id="secretCode">
+                    </div>
+                    <button type="submit" class="btn btn-success btn-block">Update profile</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="dashboard-container">
+        <div class="dashboard-nav">
+            <ul>
+                <li class="dashboard-nav-header">
+                    <span>
+                        <img class ="dashboard-profile-img" src="profileImage.png" alt="profile image">
+                    </span>
+                </li>
+                <div class="dashboard-item-container">
+                    <li class="dashboard-item">
+                        <a class="nav-bar-item" href="/profile">
+                            <span class="nav-bar-item">Profile</span>
+                        </a>
+                    </li>
+                    <li class="dashboard-item">
+                        <a class="nav-bar-item" href="/updateProfileDetails">
+                            <span class="nav-bar-item">Edit profile</span>
+                        </a>
+                    </li>
+                    <li class="dashboard-item">
+                        <a class="nav-bar-item" href="/update">
+                            <span class="nav-bar-item">Update</span>
+                        </a>
+                    </li>
+                    <li class="dashboard-item">
+                        <a class="nav-bar-item" href="/payment">
+                            <span class="nav-bar-item">Make Payment</span>
+                        </a>
+                    </li>
+                    <li class="dashboard-item">
+                        <a class="nav-bar-item" href="/general">
+                            <span class="nav-bar-item">General Page</span>
+                        </a>
+                    </li>
+                </div>
+            </ul>
+        </div>
+    </div>
+    <script type="text/javascript" src="jquery-3.1.1.js"></script>
+    <script type="text/javascript" src="bootstrap-4.0.0-dist/js/bootstrap.min.js"></script>
+
+</body>
+
+</html>
