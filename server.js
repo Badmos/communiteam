@@ -7,11 +7,16 @@ const express = require('express'),
     nodemailer = require('nodemailer'),
     session = require('express-session'),
     uuidv4 = require('uuid/v4'),
-    app = express(),
-    router = express.Router(),
     path = require('path'),
-    PORT = app.get(process.env.PORT) || 3000;
+    multer = require('multer'),
+    cloudinary = require('cloudinary'),
+    cloudinaryStorage = require('multer-storage-cloudinary');
+
 require('dotenv').config();
+const router = express.Router(),
+    app = express();
+
+let PORT = app.get(process.env.PORT) || 3000;
 const { User, Update, Community, ExCommunityMember } = require('./model/db/schema');
 
 let mongodbUrl = process.env.DATABASEURL || 'mongodb://localhost:27017/communiteam';
@@ -133,6 +138,27 @@ passport.use('local-login', new LocalStrategy({ usernameField: 'email', password
     }
 ));
 
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+const storage = cloudinaryStorage({
+    cloudinary: cloudinary,
+    folder: "profilePicture",
+    allowedFormats: ["jpg", "png", "png"],
+    transformation: [{ width: 500, height: 500, crop: "limit" }]
+});
+
+let imageFilter = function(req, file, cb) {
+    if (!file.originalname.match(/\.(jpg|jpeg|png)$/i)) {
+        return cb(new Error('Only JPG, JPEG, and PNG formats are supported'), false)
+    }
+    cb(null, true)
+}
+
+const parser = multer({ storage: storage, fileFilter: imageFilter });
+
 app.get(['/', '/home'], (req, res) => {
     res.render('home');
 });
@@ -195,6 +221,16 @@ app.get('/update', isLoggedIn, isActivated, (req, res) => {
         })
     }
 });
+
+app.get('/updateProfileDetails', isLoggedIn, isActivated, (req, res) => {
+    User.findById(req.user.id)
+        .then(() => {
+            res.render('editProfile', { user: req.user })
+        })
+        .catch((err) => {
+            console.log(err)
+        })
+})
 
 app.get('/payment', isLoggedIn, isActivated, (req, res) => {
     res.render('payment');
@@ -364,11 +400,35 @@ app.post('/addCommunityName', isLoggedIn, isAdmin, isActivated, (req, res) => {
 
 });
 
-app.post('/updateProfileDetails', isLoggedIn, isActivated, (req, res) => {
-    let phone = req.body.phone,
-        address = req.body.address,
-        state = req.body.state,
-        secretCode = req.body.secretCode;
+app.post('/updateProfileDetails', isLoggedIn, isActivated, parser.single("userPhoto"), function(req, res) {
+    // if (err) {
+    //     return res.status(500).send("Image must be PNG, JPEG, or JPG")
+    // }
+    // next();
+    cloudinary.v2.uploader.upload(req.file.url, (error, response) => {
+        if (error) {
+            console.log(error)
+            res.redirect('back')
+        } else {
+            let phone = req.body.phone,
+                state = req.body.state,
+                address = req.body.address,
+                userPhoto = {};
+            userPhoto.userPhotoURL = req.file.url;
+            userPhoto.userPhotoID = req.file.public_id;
+            secretCode = req.body.secretCode;
+            User.findByIdAndUpdate(req.user.id, { $set: { phone, state, address, secretCode, userPhoto, accountIsUpdated: true } }, { new: true })
+                .then((updatedUser) => {
+                    console.log('User details updated')
+                    res.redirect('/profile')
+                })
+                .catch((error) => {
+                    console.log('Error occured, user details cannot be updated')
+                    res.redirect('/back')
+                })
+        }
+    })
+
 })
 
 app.post('/createAdminPost', isLoggedIn, isAdmin, (req, res) => {
@@ -482,7 +542,7 @@ app.post('/leaveCommunity', isLoggedIn, (req, res) => {
                 // remove user from community. They still remain on the platform.
                 let userRoleArray = User.schema.path('role').enumValues,
                     role = userRoleArray[0]
-                User.findOneAndUpdate({ email }, { $set: { communityId: null, communityName: null, toPay: 0, role, houseId: null, secretCode: null } }, { new: true })
+                User.findOneAndUpdate({ email }, { $set: { communityId: null, communityName: null, toPay: 0, role, houseId: null, secretCode: null, accountIsUpdated: false } }, { new: true })
                     .then((userWithoutCommunity) => {
                         res.send(userWithoutCommunity)
                     }).catch((err) => {
