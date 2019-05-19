@@ -36,6 +36,10 @@ let userSchema = new Schema({
         default: false
     },
     activationToken: String,
+    accountIsUpdated: {
+        type: Boolean,
+        default: false
+    },
     phone: {
         type: Number,
         minlength: 11,
@@ -64,6 +68,10 @@ let userSchema = new Schema({
     communityId: {
         type: String,
         default: null
+    },
+    userPhoto: {
+        userPhotoURL: String,
+        userPhotoID: String
     },
     houseId: Number,
     secretCode: {
