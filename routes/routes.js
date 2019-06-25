@@ -1,7 +1,7 @@
 const express = require('express'),
     router = express.Router(),
     cloudinary = require('cloudinary')
-    mongoose = require('mongoose');
+mongoose = require('mongoose');
 
 // Local Packages
 const passport = require('../config/passport'),
@@ -298,17 +298,17 @@ router.route('/updateProfileDetails').post(isLoggedIn, isActivated, parser.singl
 router.route('/createAdminPost')
     .post(isLoggedIn, isAdmin, (req, res) => {
         User.findById(req.user._id, (err, user) => {
-            let title = req.body.title;
-            let content = req.body.content;
-            let amount = req.body.amount;
-            let id = req.user._id;
-            let email = req.user.email;
-            let firstName = req.user.firstName;
-            let lastName = req.user.lastName;
-            let communityId = req.user.communityId;
-            let communityName = req.user.communityName;
-            let paymentIsCompulsory = JSON.parse(req.body.paymentIsCompulsory.toLowerCase());
-            let updateAuthor = { id, email, firstName, lastName };
+            let title = req.body.title,
+                content = req.body.content,
+                amount = req.body.amount,
+                id = req.user._id,
+                email = req.user.email,
+                firstName = req.user.firstName,
+                lastName = req.user.lastName,
+                communityId = req.user.communityId,
+                communityName = req.user.communityName,
+                paymentIsCompulsory = JSON.parse(req.body.paymentIsCompulsory.toLowerCase()),
+                updateAuthor = { id, email, firstName, lastName };
 
             let update = new Update({ title, content, amount, communityId, paymentIsCompulsory, updateAuthor });
             update.save().then((newUpdate) => {
@@ -325,7 +325,6 @@ router.route('/createAdminPost')
                                         paymentTitle = req.body.title,
                                         paymentIsCompulsory = JSON.parse(req.body.paymentIsCompulsory.toLowerCase());
                                     console.log(paymentIsCompulsory)
-                                    console.log(typeof paymentIsCompulsory)
                                     communityUser.paymentDetails.push({ paymentId, amount, paymentTitle, paymentIsCompulsory, communityId, communityName })
                                         //add amount to all community users debt (toPay)
                                     communityUser.toPay = communityUser.toPay + Number(amount);
