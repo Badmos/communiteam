@@ -23,6 +23,7 @@ passport.use('local-register', new LocalStrategy({ usernameField: 'email', passw
             if (err) return done(err);
             if (user) return done(null, false, console.log('Email is taken'));
             else {
+                // replace all instances of a '-' with an empty string.
                 let uuidFormattedToken = uuidv4().replace(/-/g, ''),
                     randomToken = Math.random().toString().substring(2)
                 user = new User()

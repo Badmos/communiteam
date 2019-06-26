@@ -43,7 +43,7 @@ let userSchema = new Schema({
         default: false
     },
     phone: {
-        type: Number,
+        type: String,
         minlength: 11,
         validate: {
             validator: phoneNumber => validator.isMobilePhone(phoneNumber)

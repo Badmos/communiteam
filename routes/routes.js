@@ -12,7 +12,7 @@ const passport = require('../config/passport'),
 
 router.route(['/', '/home'])
     .get((req, res) => {
-        res.render('home');
+        res.render('index');
     });
 
 router.route('/register')
@@ -27,7 +27,7 @@ router.route('/activateUser/:activationToken')
             if (err) console.log(err)
             else if (!user) console.log("Activation token does not exist"), res.redirect('/login')
             else {
-                user.activationToken = undefined;
+                user.activationToken = null;
                 user.save().then(() => {
                     console.log('Account activated. Proceed to Login')
                     res.redirect('/login')
@@ -265,19 +265,20 @@ router.route('/addCommunityName')
     });
 
 router.route('/updateProfileDetails').post(isLoggedIn, isActivated, parser.single("userPhoto"), function(req, res) {
-    // if (err) {
-    //     return res.status(500).send("Image must be PNG, JPEG, or JPG")
-    // }
-    // next();
+    let phone = req.body.phone,
+        state = req.body.state,
+        address = req.body.address,
+        userPhoto = {};
+    if (phone.length < 11) {
+        console.log('Phone must have minimum length of 11 characters')
+        res.redirect('back')
+        return;
+    }
     cloudinary.v2.uploader.upload(req.file.url, (error, response) => {
         if (error) {
             console.log(error)
             res.redirect('back')
         } else {
-            let phone = req.body.phone,
-                state = req.body.state,
-                address = req.body.address,
-                userPhoto = {};
             userPhoto.userPhotoURL = req.file.url;
             userPhoto.userPhotoID = req.file.public_id;
             secretCode = req.body.secretCode;
@@ -287,8 +288,8 @@ router.route('/updateProfileDetails').post(isLoggedIn, isActivated, parser.singl
                     res.redirect('/profile')
                 })
                 .catch((error) => {
-                    console.log('Error occured, user details cannot be updated')
-                    res.redirect('/back')
+                    console.log('Phone must have minimum length of 11 characters')
+                    res.redirect('back')
                 })
         }
     })
@@ -324,7 +325,6 @@ router.route('/createAdminPost')
                                     let paymentId = newUpdate._id,
                                         paymentTitle = req.body.title,
                                         paymentIsCompulsory = JSON.parse(req.body.paymentIsCompulsory.toLowerCase());
-                                    console.log(paymentIsCompulsory)
                                     communityUser.paymentDetails.push({ paymentId, amount, paymentTitle, paymentIsCompulsory, communityId, communityName })
                                         //add amount to all community users debt (toPay)
                                     communityUser.toPay = communityUser.toPay + Number(amount);
