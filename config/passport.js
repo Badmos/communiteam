@@ -1,6 +1,7 @@
 const passport = require('passport'),
     LocalStrategy = require('passport-local').Strategy,
-    nodemailer = require('nodemailer');
+    uuidv4 = require('uuid/v4')
+nodemailer = require('nodemailer');
 
 // Local Packages
 const { User } = require('../db/models/schema');
