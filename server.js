@@ -6,7 +6,8 @@ const express = require('express'),
     path = require('path'),
     cloudinary = require('cloudinary'),
     flash = require('express-flash'),
-    session = require('express-session');
+    session = require('express-session'),
+    methodOverride = require("method-override");
 
 // Local packages
 const routes = require('./routes/routes'),
@@ -33,6 +34,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
 app.use('/', routes);
+app.use(methodOverride("_method"))
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
