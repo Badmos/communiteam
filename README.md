@@ -1,7 +1,7 @@
 # Communiteam
 This Node.js application brings municipalities/communities to the cloud through a web interface
 
-### Core Features
+## Core Features
 * User & Community Verification
 * Authentication & Authorization
 * Payment Handling 
