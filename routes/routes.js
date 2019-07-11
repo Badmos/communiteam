@@ -10,7 +10,7 @@ const passport = require('../config/passport'),
     { parser } = require('../config/config');
 
 
-router.route(['/', '/home'])
+router.route(['/', '/home', '/index'])
     .get((req, res) => {
         res.render('index');
     });
@@ -19,6 +19,12 @@ router.route('/register')
     .get((req, res) => {
         res.render('register');
     });
+
+router.route('/about')
+    .get((req, res) => {
+        res.render('about');
+    });
+
 
 router.route('/activateUser/:activationToken')
     .get((req, res) => {
