@@ -11,6 +11,7 @@ const express = require('express'),
 
 // Local packages
 const routes = require('./routes/routes'),
+    { mongoose } = require('./db/mongoose'),
     passport = require('./config/passport');
 
 require('dotenv').config();
@@ -40,6 +41,26 @@ cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Clean up server when process exits
+process.on('exit', (code) => {
+    mongoose.disconnect();
+    console.log('PROCESS IS EXITING WITH CODE ' + code);
+});
+
+// Handle server clean up in the event  of CTRL-C exit
+process.on('SIGINT', (code) => {
+    console.log('Ctrl-C was hit by server admin. EXITING WITH CODE ' + code);
+    mongoose.disconnect();
+    process.exit(2)
+});
+
+// Handle server clean up for uncaught errors
+process.on('uncaughtException', (err) => {
+    console.log(err.stack);
+    mongoose.disconnect();
+    process.exit(99)
 });
 
 app.listen(PORT, () => {
